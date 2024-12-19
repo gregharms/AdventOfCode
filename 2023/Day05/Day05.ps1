@@ -1,20 +1,8 @@
 $dayNum = "05"
 $AoCdayPath = "./AdventOfCode/2023/Day$dayNum"
 
-$data = Get-Content "$($AoCdayPath)/example.txt"
-# $data = Get-Content "$($AoCdayPath)/input.txt"
-
-function mapper {
-    $emptyMap = New-Object System.Collections.Generic.List[object]
-    for ($i = 0; $i -le 99; $i++) {
-        $emptyMap.Add(
-            [PSCustomObject]@{
-                dest = $i
-                src  = $i
-            })
-    }
-    $emptyMap
-}
+# $data = Get-Content "$($AoCdayPath)/example.txt"
+$data = Get-Content "$($AoCdayPath)/input.txt"
 
 $lines = $data.count
 
@@ -43,7 +31,7 @@ for ($i = 2; $i -lt $lines; $i++) {
         $sourceName = $map.split('-')[0]
         #"$i - $sourceName to $destinationName"
         $i++
-        $mappingTable = mapper
+        $mappingTable = New-Object System.Collections.Generic.List[object]
     }
 
     if ($data[$i] -eq '') {
@@ -51,19 +39,24 @@ for ($i = 2; $i -lt $lines; $i++) {
         $destinationName = $null
     }
     else {
-        [int[]]$nums = ([regex]::Matches($data[$i], '\d+')).Value
+        $nums = ([regex]::Matches($data[$i], '\d+')).Value
         $destination = $nums[0]
         $source = $nums[1]
         $rangeLength = $nums[2]
     
         for ($j = $rangeLength; $j -gt 0; $j--) {
-            ($mappingTable | Where-Object { $_.src -eq $source }).dest = $destination
+            $mappingTable.Add(
+                [PSCustomObject]@{
+                    dest = $destination
+                    src  = $source
+                })
             $source++
             $destination++
         }
         foreach ($seed in $seedMap) {
             #"Setting $destinationName for $($seed.$sourceName)"
-            $seed.$destinationName = ($mappingTable | Where-Object { $_.src -eq $seed.$sourceName }).dest
+            $destinationValue = ($mappingTable | Where-Object { $_.src -eq $seed.$sourceName }).dest
+            $seed.$destinationName = if ($destinationValue) { $destinationValue } else { $seed.$sourceName }
         }
     }
 }
